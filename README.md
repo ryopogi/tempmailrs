@@ -30,7 +30,7 @@ A lightweight, privacy-focused temporary email client built with the official [M
 - Material Icons
 
 ## 🚀 Quick Start
-1. Use instantly: [Live Demo Link]
+1. Use instantly: [Live Demo Link](https://agaggsgsfsfwcau.github.io/tempmail/)
 2. Or clone locally:
 ```bash
 git clone https://github.com/agaggsgsfsfwcau/tempmail.git
