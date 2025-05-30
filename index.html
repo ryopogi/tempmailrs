@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Temp Mail</title>
+  <title>Temp Mail - Mail.tm API Client</title>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
@@ -198,7 +198,19 @@
       -webkit-box-orient: vertical;
     }
 
-    .dark-mode .email-content {
+    .email-full-content {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      overflow: auto;
+      max-height: 400px;
+    }
+
+    .dark-mode .email-content,
+    .dark-mode .email-full-content {
       background: rgba(255,255,255,0.05);
     }
 
@@ -524,6 +536,7 @@
 
     async function showFullMessage(id, btn) {
       try {
+        const originalText = btn.innerHTML;
         btn.innerHTML = '<span class="material-icons">hourglass_top</span> Loading...';
         btn.disabled = true;
 
@@ -531,18 +544,80 @@
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        if (!res.ok) {
+          throw new Error('Failed to fetch message');
+        }
+
         const data = await res.json();
         const msgDiv = document.getElementById(`msg-${id}`);
-        let content = data.html || data.text || 'No content available';
-
-        msgDiv.innerHTML = `<div class="email-content">${sanitizeHtml(content)}</div>`;
+        
+        // Create a safe preview of the content
+        let content = data.text || data.html || 'No content available';
+        if (data.html) {
+          // For HTML content, we'll create a sandboxed iframe
+          const iframe = document.createElement('iframe');
+          iframe.sandbox = 'allow-same-origin';
+          iframe.style.width = '100%';
+          iframe.style.height = '400px';
+          iframe.style.border = 'none';
+          iframe.style.backgroundColor = 'transparent';
+          iframe.srcdoc = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  padding: 15px;
+                  margin: 0;
+                  background-color: transparent;
+                }
+              </style>
+            </head>
+            <body>
+              ${data.html}
+            </body>
+            </html>
+          `;
+          
+          // Clear previous content and append iframe
+          msgDiv.innerHTML = '';
+          msgDiv.appendChild(iframe);
+        } else {
+          // For plain text, just display with proper formatting
+          msgDiv.innerHTML = `
+            <div class="email-full-content">
+              ${content.replace(/\n/g, '<br>')}
+            </div>
+          `;
+        }
+        
         msgDiv.style.display = 'block';
+        btn.innerHTML = '<span class="material-icons">fullscreen_exit</span> Hide Message';
+        btn.onclick = function() {
+          toggleMessageDisplay(id, btn, originalText);
+        };
+        
       } catch (err) {
-        console.error(err);
+        console.error('Error loading message:', err);
         showSnackbar('Error loading message', 'error');
+        btn.innerHTML = originalText;
       } finally {
-        btn.innerHTML = '<span class="material-icons">fullscreen</span> View Full Message';
         btn.disabled = false;
+      }
+    }
+
+    function toggleMessageDisplay(id, btn, originalText) {
+      const msgDiv = document.getElementById(`msg-${id}`);
+      if (msgDiv.style.display === 'none') {
+        msgDiv.style.display = 'block';
+        btn.innerHTML = '<span class="material-icons">fullscreen_exit</span> Hide Message';
+      } else {
+        msgDiv.style.display = 'none';
+        btn.innerHTML = originalText;
+        btn.onclick = function() {
+          showFullMessage(id, btn);
+        };
       }
     }
 
@@ -566,13 +641,6 @@
     function generateStrongPassword() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
       return Array.from({ length: 16 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    }
-
-    function sanitizeHtml(html) {
-      const temp = document.createElement('div');
-      temp.innerHTML = html;
-      temp.querySelectorAll('script, style').forEach(el => el.remove());
-      return temp.innerHTML;
     }
 
     function showLoading(msg) {
