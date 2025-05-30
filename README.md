@@ -1,6 +1,6 @@
 # 📧 Temp Mail - Mail.tm API Client  
 
-A lightweight, privacy-focused temporary email client built with the official [Mail.tm API](https://mail.tm). Generate disposable email addresses instantly and manage your inbox without compromising your real email.
+A lightweight, privacy-focused temporary email client built with the official [Mail.tm API](https://docs.mail.tm/). Generate disposable email addresses instantly and manage your inbox without compromising your real email.
 
 ![Demo Screenshot](screenshot.png) *(replace with actual screenshot)*
 
