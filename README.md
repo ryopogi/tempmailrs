@@ -1,1 +1,1 @@
-# tempmail.github.io
+# Temp Mail
